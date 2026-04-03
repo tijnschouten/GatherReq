@@ -1,0 +1,7 @@
+package-as: GatherReq
+ignore:
+  - .github
+  - dist
+  - CURSEFORGE_DESCRIPTION.md
+  - assets/gatherreq-logo.png
+  - CHANGELOG.md
