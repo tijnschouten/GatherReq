@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.1
+
+- Added addon-list icon support with bundled TGA icon texture
+- Fixed duplicate requirement lines after profession skill-ups while the tooltip stayed open
+- Added GitHub-to-CurseForge automatic packaging files
+
 ## 1.0.0
 
 - Initial release of `GatherReq`
