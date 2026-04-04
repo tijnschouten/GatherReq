@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.3
+
+- Switched CurseForge automatic packaging to an HTML manual changelog file
+- Limited CurseForge release notes to the latest release entry
+- No addon behavior changes
+
 ## 1.0.2
 
 - Switched CurseForge automatic packaging to use this manual markdown changelog
