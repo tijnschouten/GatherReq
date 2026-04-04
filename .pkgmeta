@@ -1,7 +1,7 @@
 package-as: GatherReq
 manual-changelog:
-  filename: CHANGELOG_CF.html
-  markup-type: html
+  filename: CHANGELOG.md
+  markup-type: markdown
 enable-nolib-creation: no
 ignore:
   - .github

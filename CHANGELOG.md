@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.4
+
+- Reverted CurseForge packaging to use the markdown changelog as the single source of truth
+- Removed the duplicate HTML changelog file
+- No addon behavior changes
+
 ## 1.0.3
 
 - Switched CurseForge automatic packaging to an HTML manual changelog file
