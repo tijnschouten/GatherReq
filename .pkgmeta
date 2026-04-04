@@ -1,7 +1,10 @@
 package-as: GatherReq
+manual-changelog:
+  filename: CHANGELOG.md
+  markup-type: markdown
+enable-nolib-creation: no
 ignore:
   - .github
   - dist
   - CURSEFORGE_DESCRIPTION.md
   - assets/gatherreq-logo.png
-  - CHANGELOG.md

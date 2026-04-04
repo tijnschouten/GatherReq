@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.2
+
+- Switched CurseForge automatic packaging to use this manual markdown changelog
+- Disabled unnecessary `-nolib` package generation
+- No addon behavior changes
+
 ## 1.0.1
 
 - Added addon-list icon support with bundled TGA icon texture
