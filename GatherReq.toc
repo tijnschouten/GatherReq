@@ -2,7 +2,7 @@
 ## Title: GatherReq
 ## Notes: Shows required Mining, Herbalism, Skinning, and Lockpicking skill in the tooltip.
 ## Author: OpenAI Codex
-## Version: 1.0.4
+## Version: 1.0.5
 ## IconTexture: Interface\AddOns\GatherReq\assets\gatherreq-icon.tga
 
 Data.lua

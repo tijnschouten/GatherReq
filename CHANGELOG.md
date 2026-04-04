@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.5
+
+- Replaced Blizzard's default profession requirement lines more consistently for unlearned gathering professions
+- Replaced the `Skinnable` tooltip line with the full skinning requirement line
+- Made training-available warnings more prominent
+
 ## 1.0.4
 
 - Reverted CurseForge packaging to use the markdown changelog as the single source of truth

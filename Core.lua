@@ -54,7 +54,7 @@ end
 
 local function GetLineColor(currentSkill, requiredSkill)
     if type(currentSkill) ~= "number" then
-        return COLOR_NEUTRAL[1], COLOR_NEUTRAL[2], COLOR_NEUTRAL[3]
+        return COLOR_RED[1], COLOR_RED[2], COLOR_RED[3]
     end
 
     if currentSkill < requiredSkill then
@@ -86,6 +86,10 @@ end
 
 local function GetRequirementPrefix(professionName, requiredSkill)
     return string.format("Requires %s %d", professionName, requiredSkill)
+end
+
+local function GetDefaultProfessionPrefix(professionName)
+    return string.format("Requires %s", professionName)
 end
 
 local function TooltipContainsText(tooltip, expectedText)
@@ -228,7 +232,7 @@ local function GetTrainingHint(professionName, currentSkill, currentMaxSkill)
     end
 
     if playerLevel >= nextRank.level then
-        return TRAINING_LINE_PREFIX .. string.format("%s available now", nextRank.rank), COLOR_GREEN
+        return TRAINING_LINE_PREFIX .. string.format("%s available now", nextRank.rank), COLOR_YELLOW
     end
 
     return TRAINING_LINE_PREFIX .. string.format("%s at level %d (You: %d)", nextRank.rank, nextRank.level, playerLevel), COLOR_ORANGE
@@ -263,12 +267,18 @@ function PST:ProcessTooltip(tooltip)
     local red, green, blue = GetLineColor(currentSkill, requiredSkill)
     local existingRequirementLine = FindTooltipLineByPrefix(tooltip, requirementPrefix)
     local existingProfessionLine = FindTooltipLineByText(tooltip, professionName)
+    local existingDefaultRequirementLine = FindTooltipLineByPrefix(tooltip, GetDefaultProfessionPrefix(professionName))
+    local existingSkinnableLine = professionName == professions.Skinning and FindTooltipLineByText(tooltip, _G.UNIT_SKINNABLE or "Skinnable") or nil
     local trainingText, trainingColor = GetTrainingHint(professionName, currentSkill, currentMaxSkill)
     local existingTrainingLine = FindTooltipLineByPrefix(tooltip, TRAINING_LINE_PREFIX)
 
     tooltip.__PSTAddingLine = true
     if existingRequirementLine then
         SetTooltipLine(existingRequirementLine, requirementText, red, green, blue)
+    elseif existingSkinnableLine then
+        SetTooltipLine(existingSkinnableLine, requirementText, red, green, blue)
+    elseif existingDefaultRequirementLine then
+        SetTooltipLine(existingDefaultRequirementLine, requirementText, red, green, blue)
     elseif existingProfessionLine then
         SetTooltipLine(existingProfessionLine, requirementText, red, green, blue)
     else
