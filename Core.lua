@@ -29,6 +29,7 @@ local REFERENCE_NAME_WIDTH = 270
 local REFERENCE_SKILL_WIDTH = 56
 local GENERIC_LOCKBOX_ICON = "Interface\\Icons\\INV_Misc_Bag_10_Black"
 local GENERIC_DOOR_ICON = "Interface\\Icons\\INV_Misc_Key_12"
+local CHAT_PREFIX = "|cffd9d1b8GatherReq:|r "
 
 local referenceCategories = {
     {
@@ -54,6 +55,13 @@ local referenceCategories = {
         label = "Skinning",
         profession = professions.Skinning,
     },
+}
+
+local trackedProfessionOrder = {
+    professions.Herbalism,
+    professions.Mining,
+    professions.Skinning,
+    professions.Lockpicking,
 }
 
 local function GetTooltipTitle(tooltip)
@@ -281,6 +289,24 @@ local function GetTrainingHint(professionName, currentSkill, currentMaxSkill)
     return TRAINING_LINE_PREFIX .. string.format("%s at level %d (You: %d)", nextRank.rank, nextRank.level, playerLevel), COLOR_ORANGE
 end
 
+local function GetNextTrainingRank(professionName, currentSkill, currentMaxSkill)
+    local professionTraining = trainingRanks[professionName]
+    if not professionTraining or type(currentSkill) ~= "number" or type(currentMaxSkill) ~= "number" then
+        return nil
+    end
+
+    if currentMaxSkill >= 375 then
+        return nil
+    end
+
+    local nextRank = professionTraining[currentMaxSkill]
+    if not nextRank then
+        return nil
+    end
+
+    return nextRank
+end
+
 local function GetTrainingStatus(professionName, currentSkill, currentMaxSkill)
     local professionTraining = trainingRanks[professionName]
     if not professionTraining or type(currentSkill) ~= "number" or type(currentMaxSkill) ~= "number" then
@@ -361,6 +387,151 @@ local function BuildSortedEntries(data)
     end)
 
     return entries
+end
+
+local function BuildUnlockEntries(professionName)
+    local entries = {}
+
+    if professionName == professions.Herbalism then
+        for _, entry in ipairs(BuildSortedEntries(Data.HerbNodes)) do
+            table.insert(entries, {
+                name = entry.name,
+                skill = entry.skill,
+            })
+        end
+    elseif professionName == professions.Mining then
+        for _, entry in ipairs(BuildSortedEntries(Data.MiningNodes)) do
+            table.insert(entries, {
+                name = entry.name,
+                skill = entry.skill,
+            })
+        end
+    elseif professionName == professions.Lockpicking then
+        for _, entry in ipairs(BuildSortedEntries(Data.Lockboxes)) do
+            table.insert(entries, {
+                name = entry.name,
+                skill = entry.skill,
+            })
+        end
+
+        for _, entry in ipairs(BuildSortedEntries(Data.LockedObjects)) do
+            table.insert(entries, {
+                name = entry.name,
+                skill = entry.skill,
+            })
+        end
+
+        for _, entry in ipairs(BuildSortedEntries(Data.LockpickableDoors)) do
+            table.insert(entries, {
+                name = string.format("%s (%s)", entry.name, entry.location),
+                skill = entry.skill,
+            })
+        end
+
+        table.sort(entries, function(left, right)
+            if left.skill == right.skill then
+                return left.name < right.name
+            end
+
+            return left.skill < right.skill
+        end)
+    end
+
+    return entries
+end
+
+local function GetUnlockedEntries(professionName, oldSkill, newSkill)
+    local unlocked = {}
+    if type(oldSkill) ~= "number" or type(newSkill) ~= "number" or newSkill <= oldSkill then
+        return unlocked
+    end
+
+    for _, entry in ipairs(BuildUnlockEntries(professionName)) do
+        if entry.skill > oldSkill and entry.skill <= newSkill then
+            table.insert(unlocked, entry)
+        end
+    end
+
+    return unlocked
+end
+
+local function JoinEntryNames(entries, limit)
+    local names = {}
+    local total = #entries
+    local maxEntries = math.min(total, limit or total)
+
+    for index = 1, maxEntries do
+        table.insert(names, entries[index].name)
+    end
+
+    local text = table.concat(names, ", ")
+    if total > maxEntries then
+        text = string.format("%s, +%d more", text, total - maxEntries)
+    end
+
+    return text
+end
+
+local function Notify(message)
+    if not message or message == "" then
+        return
+    end
+
+    if RaidWarningFrame and RaidNotice_AddMessage and ChatTypeInfo and ChatTypeInfo["RAID_WARNING"] then
+        RaidNotice_AddMessage(RaidWarningFrame, message, ChatTypeInfo["RAID_WARNING"])
+    end
+
+    if DEFAULT_CHAT_FRAME and DEFAULT_CHAT_FRAME.AddMessage then
+        DEFAULT_CHAT_FRAME:AddMessage(CHAT_PREFIX .. message)
+    end
+end
+
+local function IsTrainingReady(professionName, currentSkill, currentMaxSkill, playerLevel)
+    local nextTraining = GetNextTrainingRank(professionName, currentSkill, currentMaxSkill)
+    if not nextTraining then
+        return false, nil
+    end
+
+    if type(currentSkill) ~= "number" or type(playerLevel) ~= "number" then
+        return false, nextTraining
+    end
+
+    return currentSkill >= nextTraining.skill and playerLevel >= nextTraining.level, nextTraining
+end
+
+function PST:RefreshTrackedSkills(silent)
+    self.trackedSkills = self.trackedSkills or {}
+    local playerLevel = UnitLevel("player")
+
+    for _, professionName in ipairs(trackedProfessionOrder) do
+        local currentSkill, currentMaxSkill = GetSkillInfo(professionName)
+        local previous = self.trackedSkills[professionName]
+        local trainingReady, nextTraining = IsTrainingReady(professionName, currentSkill, currentMaxSkill, playerLevel)
+
+        if previous and not silent then
+            if type(previous.skill) == "number" and type(currentSkill) == "number" and currentSkill > previous.skill then
+                local unlockedEntries = GetUnlockedEntries(professionName, previous.skill, currentSkill)
+                if #unlockedEntries > 0 then
+                    Notify(string.format(
+                        "%s %d: unlocked %s",
+                        professionName,
+                        currentSkill,
+                        JoinEntryNames(unlockedEntries, 3)
+                    ))
+                end
+            end
+
+            if not previous.trainingReady and trainingReady and nextTraining then
+                Notify(string.format("%s: %s training available", professionName, nextTraining.rank))
+            end
+        end
+
+        self.trackedSkills[professionName] = {
+            skill = currentSkill,
+            maxSkill = currentMaxSkill,
+            trainingReady = trainingReady,
+        }
+    end
 end
 
 local function GetItemData(itemToken)
@@ -800,33 +971,51 @@ end
 
 local frame = CreateFrame("Frame")
 frame:RegisterEvent("ADDON_LOADED")
-frame:SetScript("OnEvent", function(_, event, loadedAddon)
-    if event ~= "ADDON_LOADED" or loadedAddon ~= addonName then
+frame:SetScript("OnEvent", function(_, event, ...)
+    if event == "ADDON_LOADED" then
+        local loadedAddon = ...
+        if loadedAddon ~= addonName then
+            return
+        end
+
+        frame:UnregisterEvent("ADDON_LOADED")
+        frame:RegisterEvent("PLAYER_ENTERING_WORLD")
+        frame:RegisterEvent("PLAYER_LEVEL_UP")
+        frame:RegisterEvent("SKILL_LINES_CHANGED")
+
+        GameTooltip:HookScript("OnTooltipSetItem", function(tooltip)
+            PST:ProcessTooltip(tooltip)
+        end)
+
+        GameTooltip:HookScript("OnTooltipSetUnit", function(tooltip)
+            PST:ProcessTooltip(tooltip)
+        end)
+
+        GameTooltip:HookScript("OnShow", function(tooltip)
+            PST:ProcessTooltip(tooltip)
+        end)
+
+        GameTooltip:HookScript("OnTooltipCleared", function(tooltip)
+            tooltip.__PSTAddingLine = nil
+        end)
+
+        SLASH_GATHERREQ1 = "/gatherreq"
+        SLASH_GATHERREQ2 = "/gr"
+        SlashCmdList.GATHERREQ = function(message)
+            PST:ToggleReferenceFrame(message)
+        end
+
         return
     end
 
-    frame:UnregisterEvent("ADDON_LOADED")
+    if event == "PLAYER_ENTERING_WORLD" then
+        PST:RefreshTrackedSkills(true)
+        return
+    end
 
-    GameTooltip:HookScript("OnTooltipSetItem", function(tooltip)
-        PST:ProcessTooltip(tooltip)
-    end)
-
-    GameTooltip:HookScript("OnTooltipSetUnit", function(tooltip)
-        PST:ProcessTooltip(tooltip)
-    end)
-
-    GameTooltip:HookScript("OnShow", function(tooltip)
-        PST:ProcessTooltip(tooltip)
-    end)
-
-    GameTooltip:HookScript("OnTooltipCleared", function(tooltip)
-        tooltip.__PSTAddingLine = nil
-    end)
-
-    SLASH_GATHERREQ1 = "/gatherreq"
-    SLASH_GATHERREQ2 = "/gr"
-    SlashCmdList.GATHERREQ = function(message)
-        PST:ToggleReferenceFrame(message)
+    if event == "PLAYER_LEVEL_UP" or event == "SKILL_LINES_CHANGED" then
+        PST:RefreshTrackedSkills(false)
+        return
     end
 end)
 

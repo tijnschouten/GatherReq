@@ -10,6 +10,7 @@
 - Shows `Requires Lockpicking <skill>` on supported lockbox, locked-object, and door/gate tooltips.
 - Shows a training hint for `Mining`, `Herbalism`, and `Skinning` when you are within 25 points of your current cap.
 - Adds an in-game reference window for Mining, Herbs, Lockpicking, and Skinning.
+- Shows an unlock notification when a skill gain unlocks new herbs, nodes, locks, or a new training rank.
 
 The addon only augments the normal Blizzard tooltip. It does not create a separate range overlay.
 
