@@ -7,10 +7,24 @@
 - Shows `Requires Mining <skill>` on ore-node tooltips.
 - Shows `Requires Herbalism <skill>` on herb-node tooltips.
 - Shows `Requires Skinning <skill>` on skinnable corpse tooltips.
-- Shows `Requires Lockpicking <skill>` on supported lockbox and locked-object tooltips.
+- Shows `Requires Lockpicking <skill>` on supported lockbox, locked-object, and door/gate tooltips.
 - Shows a training hint for `Mining`, `Herbalism`, and `Skinning` when you are within 25 points of your current cap.
+- Adds an in-game reference window for Mining, Herbs, Lockpicking, and Skinning.
 
 The addon only augments the normal Blizzard tooltip. It does not create a separate range overlay.
+
+## Reference Window
+
+Use `/gatherreq` or `/gr` to open the reference window.
+
+Optional category shortcuts:
+
+- `/gatherreq mining`
+- `/gatherreq herbs`
+- `/gatherreq lockpicking`
+- `/gatherreq skinning`
+
+The Lockpicking section includes lockboxes, locked objects, and supported doors/gates. Herbs, ore, and lockboxes use item-backed icons so item tooltip addons can still add data like auction prices.
 
 ## Install
 
@@ -26,5 +40,5 @@ The addon only augments the normal Blizzard tooltip. It does not create a separa
 
 - This v1 is English-only and keys data by English tooltip names.
 - Unknown or ambiguous tooltip names are ignored rather than guessed.
-- There are no slash commands or saved settings in this version.
+- There are no saved settings in this version.
 - Branding assets live in `assets/`.

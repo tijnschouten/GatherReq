@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.6
+
+- Added an in-game `/gatherreq` reference window with Mining, Herbs, Lockpicking, and Skinning sections
+- Added aligned rows with item-backed icons and hover tooltips for herbs, ore, and lockboxes
+- Added real junkbox and lockbox item IDs so lockpicking entries no longer depend on cache
+- Added lockpickable door and gate references with locations, and tooltip support for supported door names
+- Fixed lockpicking reference progression for `Worn`, `Sturdy`, `Heavy`, and `Strong` junkboxes
+
 ## 1.0.5
 
 - Replaced Blizzard's default profession requirement lines more consistently for unlearned gathering professions
