@@ -6,6 +6,7 @@
 - Added training-available notifications when a skill gain or player level makes the next profession rank trainable
 - Notifications are shown both in chat and as a raid-warning style toast
 - The `/gatherreq` reference window now closes with `Esc` and auto-hides when combat starts
+- Improved minimap tooltip matching for shortened or decorated mining node titles, including underground entries
 
 ## 1.0.6
 
