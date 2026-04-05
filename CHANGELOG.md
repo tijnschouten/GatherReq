@@ -5,6 +5,7 @@
 - Added unlock notifications when a profession skill increase unlocks new herbs, mining nodes, lockboxes, locked objects, or lockpickable doors
 - Added training-available notifications when a skill gain or player level makes the next profession rank trainable
 - Notifications are shown both in chat and as a raid-warning style toast
+- The `/gatherreq` reference window now closes with `Esc` and auto-hides when combat starts
 
 ## 1.0.6
 

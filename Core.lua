@@ -787,6 +787,21 @@ local function CreateReferenceFrame()
     frame.TitleText:SetText("GatherReq")
     frame.title = frame.TitleText
 
+    if UISpecialFrames then
+        local frameName = frame:GetName()
+        local alreadyRegistered = false
+        for _, specialFrameName in ipairs(UISpecialFrames) do
+            if specialFrameName == frameName then
+                alreadyRegistered = true
+                break
+            end
+        end
+
+        if not alreadyRegistered then
+            table.insert(UISpecialFrames, frameName)
+        end
+    end
+
     frame.categoryButtons = {}
     for index, category in ipairs(referenceCategories) do
         local button = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
@@ -981,6 +996,7 @@ frame:SetScript("OnEvent", function(_, event, ...)
         frame:UnregisterEvent("ADDON_LOADED")
         frame:RegisterEvent("PLAYER_ENTERING_WORLD")
         frame:RegisterEvent("PLAYER_LEVEL_UP")
+        frame:RegisterEvent("PLAYER_REGEN_DISABLED")
         frame:RegisterEvent("SKILL_LINES_CHANGED")
 
         GameTooltip:HookScript("OnTooltipSetItem", function(tooltip)
@@ -1010,6 +1026,13 @@ frame:SetScript("OnEvent", function(_, event, ...)
 
     if event == "PLAYER_ENTERING_WORLD" then
         PST:RefreshTrackedSkills(true)
+        return
+    end
+
+    if event == "PLAYER_REGEN_DISABLED" then
+        if PST.referenceFrame and PST.referenceFrame:IsShown() then
+            PST.referenceFrame:Hide()
+        end
         return
     end
 
