@@ -64,6 +64,26 @@ local trackedProfessionOrder = {
     professions.Lockpicking,
 }
 
+local function NormalizeTooltipText(text)
+    if not text or text == "" then
+        return nil
+    end
+
+    text = string.gsub(text, "|c%x%x%x%x%x%x%x%x", "")
+    text = string.gsub(text, "|r", "")
+    text = string.gsub(text, "|T.-|t", "")
+    text = string.gsub(text, "%s+%b()", "")
+    text = string.gsub(text, "%s+", " ")
+    text = string.gsub(text, "^%s+", "")
+    text = string.gsub(text, "%s+$", "")
+
+    if text == "" then
+        return nil
+    end
+
+    return text
+end
+
 local function GetTooltipTitle(tooltip)
     local tooltipName = tooltip and tooltip:GetName()
     if not tooltipName then
@@ -75,12 +95,7 @@ local function GetTooltipTitle(tooltip)
         return nil
     end
 
-    local text = titleLine:GetText()
-    if not text or text == "" then
-        return nil
-    end
-
-    return text
+    return NormalizeTooltipText(titleLine:GetText())
 end
 
 local function GetSkillInfo(skillName)
@@ -243,8 +258,13 @@ local function GetTooltipMatch(tooltip)
         return professions.Skinning, skinningSkill, title
     end
 
-    if Data.MiningNodes and Data.MiningNodes[title] then
-        return professions.Mining, Data.MiningNodes[title], title
+    local miningKey = title
+    if Data.MiningNodes and not Data.MiningNodes[miningKey] and Data.MiningAliases then
+        miningKey = Data.MiningAliases[title] or miningKey
+    end
+
+    if Data.MiningNodes and Data.MiningNodes[miningKey] then
+        return professions.Mining, Data.MiningNodes[miningKey], miningKey
     end
 
     if Data.HerbNodes and Data.HerbNodes[title] then

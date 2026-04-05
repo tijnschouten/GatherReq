@@ -62,6 +62,24 @@ PST.Data.MiningNodes = {
     ["Ancient Gem Vein"] = 375,
 }
 
+PST.Data.MiningAliases = {
+    ["Copper"] = "Copper Vein",
+    ["Tin"] = "Tin Vein",
+    ["Silver"] = "Silver Vein",
+    ["Iron"] = "Iron Deposit",
+    ["Gold"] = "Gold Vein",
+    ["Mithril"] = "Mithril Deposit",
+    ["Truesilver"] = "Truesilver Deposit",
+    ["Dark Iron"] = "Dark Iron Deposit",
+    ["Small Thorium"] = "Small Thorium Vein",
+    ["Rich Thorium"] = "Rich Thorium Vein",
+    ["Fel Iron"] = "Fel Iron Deposit",
+    ["Adamantite"] = "Adamantite Deposit",
+    ["Rich Adamantite"] = "Rich Adamantite Deposit",
+    ["Khorium"] = "Khorium Vein",
+    ["Ancient Gem"] = "Ancient Gem Vein",
+}
+
 PST.Data.MiningReferenceItems = {
     ["Copper Vein"] = 2770,
     ["Tin Vein"] = 2771,
