@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.8
+
+- Fixed profession difficulty coloring so gray starts at the correct documented threshold
+
 ## 1.0.7
 
 - Added unlock notifications when a profession skill increase unlocks new herbs, mining nodes, lockboxes, locked objects, or lockpickable doors

@@ -131,7 +131,7 @@ local function GetLineColor(currentSkill, requiredSkill)
         return COLOR_YELLOW[1], COLOR_YELLOW[2], COLOR_YELLOW[3]
     end
 
-    if currentSkill < requiredSkill + 100 then
+    if currentSkill < requiredSkill + 99 then
         return COLOR_GREEN[1], COLOR_GREEN[2], COLOR_GREEN[3]
     end
 
