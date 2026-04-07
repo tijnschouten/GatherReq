@@ -241,45 +241,80 @@ local function GetSkinningRequirement(tooltip, unit)
     return level * 5
 end
 
-local function GetTooltipMatch(tooltip)
-    local title = GetTooltipTitle(tooltip)
-    if not title then
+local function ResolveTextMatch(text)
+    if not text then
         return nil
     end
 
-    local itemName = tooltip:GetItem()
-    if itemName and Data.Lockboxes and Data.Lockboxes[itemName] then
-        return professions.Lockpicking, Data.Lockboxes[itemName], itemName
-    end
-
-    local _, unit = tooltip:GetUnit()
-    local skinningSkill = GetSkinningRequirement(tooltip, unit)
-    if skinningSkill then
-        return professions.Skinning, skinningSkill, title
-    end
-
-    local miningKey = title
+    local miningKey = text
     if Data.MiningNodes and not Data.MiningNodes[miningKey] and Data.MiningAliases then
-        miningKey = Data.MiningAliases[title] or miningKey
+        miningKey = Data.MiningAliases[text] or miningKey
     end
 
     if Data.MiningNodes and Data.MiningNodes[miningKey] then
         return professions.Mining, Data.MiningNodes[miningKey], miningKey
     end
 
-    if Data.HerbNodes and Data.HerbNodes[title] then
-        return professions.Herbalism, Data.HerbNodes[title], title
+    if Data.HerbNodes and Data.HerbNodes[text] then
+        return professions.Herbalism, Data.HerbNodes[text], text
     end
 
-    if Data.LockedObjects and Data.LockedObjects[title] then
-        return professions.Lockpicking, Data.LockedObjects[title], title
+    if Data.LockedObjects and Data.LockedObjects[text] then
+        return professions.Lockpicking, Data.LockedObjects[text], text
     end
 
-    if Data.LockpickableDoors and Data.LockpickableDoors[title] then
-        return professions.Lockpicking, Data.LockpickableDoors[title].skill, title
+    if Data.LockpickableDoors and Data.LockpickableDoors[text] then
+        return professions.Lockpicking, Data.LockpickableDoors[text].skill, text
     end
 
     return nil
+end
+
+local function GetTooltipMatches(tooltip)
+    local matches = {}
+    local seen = {}
+    local title = GetTooltipTitle(tooltip)
+
+    local function AddMatch(professionName, requiredSkill, matchKey)
+        if not professionName or not requiredSkill or not matchKey then
+            return
+        end
+
+        local seenKey = string.format("%s|%d|%s", professionName, requiredSkill, matchKey)
+        if seen[seenKey] then
+            return
+        end
+
+        seen[seenKey] = true
+        table.insert(matches, {
+            professionName = professionName,
+            requiredSkill = requiredSkill,
+            matchKey = matchKey,
+        })
+    end
+
+    local itemName = tooltip:GetItem()
+    if itemName and Data.Lockboxes and Data.Lockboxes[itemName] then
+        AddMatch(professions.Lockpicking, Data.Lockboxes[itemName], itemName)
+    end
+
+    local _, unit = tooltip:GetUnit()
+    local skinningSkill = GetSkinningRequirement(tooltip, unit)
+    if skinningSkill then
+        AddMatch(professions.Skinning, skinningSkill, title or professions.Skinning)
+    end
+
+    local tooltipName = tooltip:GetName()
+    if tooltipName then
+        for lineIndex = 1, tooltip:NumLines() do
+            local line = _G[tooltipName .. "TextLeft" .. lineIndex]
+            local text = line and NormalizeTooltipText(line:GetText())
+            local professionName, requiredSkill, matchKey = ResolveTextMatch(text)
+            AddMatch(professionName, requiredSkill, matchKey)
+        end
+    end
+
+    return matches
 end
 
 local function GetTrainingHint(professionName, currentSkill, currentMaxSkill)
@@ -963,40 +998,62 @@ function PST:ProcessTooltip(tooltip)
         return
     end
 
-    local professionName, requiredSkill, matchKey = GetTooltipMatch(tooltip)
-    if not professionName or not requiredSkill or not matchKey then
+    local matches = GetTooltipMatches(tooltip)
+    if #matches == 0 then
         return
     end
 
-    local currentSkill, currentMaxSkill = GetSkillInfo(professionName)
-    local requirementText = GetRequirementText(professionName, requiredSkill, currentSkill)
-    local requirementPrefix = GetRequirementPrefix(professionName, requiredSkill)
-    local red, green, blue = GetLineColor(currentSkill, requiredSkill)
-    local existingRequirementLine = FindTooltipLineByPrefix(tooltip, requirementPrefix)
-    local existingProfessionLine = FindTooltipLineByText(tooltip, professionName)
-    local existingDefaultRequirementLine = FindTooltipLineByPrefix(tooltip, GetDefaultProfessionPrefix(professionName))
-    local existingSkinnableLine = professionName == professions.Skinning and FindTooltipLineByText(tooltip, _G.UNIT_SKINNABLE or "Skinnable") or nil
-    local trainingText, trainingColor = GetTrainingHint(professionName, currentSkill, currentMaxSkill)
-    local existingTrainingLine = FindTooltipLineByPrefix(tooltip, TRAINING_LINE_PREFIX)
-
     tooltip.__PSTAddingLine = true
-    if existingRequirementLine then
-        SetTooltipLine(existingRequirementLine, requirementText, red, green, blue)
-    elseif existingSkinnableLine then
-        SetTooltipLine(existingSkinnableLine, requirementText, red, green, blue)
-    elseif existingDefaultRequirementLine then
-        SetTooltipLine(existingDefaultRequirementLine, requirementText, red, green, blue)
-    elseif existingProfessionLine then
-        SetTooltipLine(existingProfessionLine, requirementText, red, green, blue)
-    else
-        tooltip:AddLine(requirementText, red, green, blue)
-    end
 
-    if trainingText and trainingColor then
-        if existingTrainingLine then
-            SetTooltipLine(existingTrainingLine, trainingText, trainingColor[1], trainingColor[2], trainingColor[3])
+    if #matches == 1 then
+        local match = matches[1]
+        local professionName = match.professionName
+        local requiredSkill = match.requiredSkill
+        local currentSkill, currentMaxSkill = GetSkillInfo(professionName)
+        local requirementText = GetRequirementText(professionName, requiredSkill, currentSkill)
+        local requirementPrefix = GetRequirementPrefix(professionName, requiredSkill)
+        local red, green, blue = GetLineColor(currentSkill, requiredSkill)
+        local existingRequirementLine = FindTooltipLineByPrefix(tooltip, requirementPrefix)
+        local existingProfessionLine = FindTooltipLineByText(tooltip, professionName)
+        local existingDefaultRequirementLine = FindTooltipLineByPrefix(tooltip, GetDefaultProfessionPrefix(professionName))
+        local existingSkinnableLine = professionName == professions.Skinning and FindTooltipLineByText(tooltip, _G.UNIT_SKINNABLE or "Skinnable") or nil
+        local trainingText, trainingColor = GetTrainingHint(professionName, currentSkill, currentMaxSkill)
+        local existingTrainingLine = FindTooltipLineByPrefix(tooltip, TRAINING_LINE_PREFIX)
+
+        if existingRequirementLine then
+            SetTooltipLine(existingRequirementLine, requirementText, red, green, blue)
+        elseif existingSkinnableLine then
+            SetTooltipLine(existingSkinnableLine, requirementText, red, green, blue)
+        elseif existingDefaultRequirementLine then
+            SetTooltipLine(existingDefaultRequirementLine, requirementText, red, green, blue)
+        elseif existingProfessionLine then
+            SetTooltipLine(existingProfessionLine, requirementText, red, green, blue)
         else
-            tooltip:AddLine(trainingText, trainingColor[1], trainingColor[2], trainingColor[3])
+            tooltip:AddLine(requirementText, red, green, blue)
+        end
+
+        if trainingText and trainingColor then
+            if existingTrainingLine then
+                SetTooltipLine(existingTrainingLine, trainingText, trainingColor[1], trainingColor[2], trainingColor[3])
+            else
+                tooltip:AddLine(trainingText, trainingColor[1], trainingColor[2], trainingColor[3])
+            end
+        end
+    else
+        for _, match in ipairs(matches) do
+            local professionName = match.professionName
+            local requiredSkill = match.requiredSkill
+            local currentSkill = GetSkillInfo(professionName)
+            local requirementText = GetRequirementText(professionName, requiredSkill, currentSkill)
+            local requirementPrefix = GetRequirementPrefix(professionName, requiredSkill)
+            local red, green, blue = GetLineColor(currentSkill, requiredSkill)
+            local existingRequirementLine = FindTooltipLineByPrefix(tooltip, requirementPrefix)
+
+            if existingRequirementLine then
+                SetTooltipLine(existingRequirementLine, requirementText, red, green, blue)
+            elseif not FindTooltipLineByText(tooltip, requirementText) then
+                tooltip:AddLine(requirementText, red, green, blue)
+            end
         end
     end
 
