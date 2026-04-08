@@ -270,6 +270,44 @@ local function ResolveTextMatch(text)
     return nil
 end
 
+local function CollectContainedTextMatches(text, addMatch)
+    if not text or not addMatch then
+        return
+    end
+
+    if Data.MiningNodes then
+        for nodeName, requiredSkill in pairs(Data.MiningNodes) do
+            if string.find(text, nodeName, 1, true) then
+                addMatch(professions.Mining, requiredSkill, nodeName)
+            end
+        end
+    end
+
+    if Data.HerbNodes then
+        for nodeName, requiredSkill in pairs(Data.HerbNodes) do
+            if string.find(text, nodeName, 1, true) then
+                addMatch(professions.Herbalism, requiredSkill, nodeName)
+            end
+        end
+    end
+
+    if Data.LockedObjects then
+        for objectName, requiredSkill in pairs(Data.LockedObjects) do
+            if string.find(text, objectName, 1, true) then
+                addMatch(professions.Lockpicking, requiredSkill, objectName)
+            end
+        end
+    end
+
+    if Data.LockpickableDoors then
+        for objectName, entry in pairs(Data.LockpickableDoors) do
+            if string.find(text, objectName, 1, true) then
+                addMatch(professions.Lockpicking, entry.skill, objectName)
+            end
+        end
+    end
+end
+
 local function GetTooltipMatches(tooltip)
     local matches = {}
     local seen = {}
@@ -311,6 +349,9 @@ local function GetTooltipMatches(tooltip)
             local text = line and NormalizeTooltipText(line:GetText())
             local professionName, requiredSkill, matchKey = ResolveTextMatch(text)
             AddMatch(professionName, requiredSkill, matchKey)
+            if not professionName then
+                CollectContainedTextMatches(text, AddMatch)
+            end
         end
     end
 
