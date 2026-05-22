@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.9
+
+- Fixed Fel Iron Deposit required skill (275 → 300)
+
 ## 1.0.8
 
 - Fixed profession difficulty coloring so gray starts at the correct documented threshold
